@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Biomecánica Matemática – Aves Paceñas</title>
+<style>
+:root{
+  --bg:#f2f5ef;--surface:#fff;--border:#cdd8c7;
+  --accent:#2e5e40;--accent2:#5a9e72;--text:#1a2620;
+  --muted:#4e6458;--warn:#b86a1a;--code:#e8ede4;
+  --hdr:#1e3d2a;--red:#c0392b;--blue:#2471a3;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+
+/* HEADER */
+header{background:var(--hdr);color:#fff;padding:14px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+header h1{font-size:1.1rem;font-weight:normal}
+header p{font-size:.75rem;opacity:.65;font-family:monospace}
+.hbadge{margin-left:auto;background:rgba(255,255,255,.12);padding:3px 10px;border-radius:4px;font-size:.72rem;font-family:monospace}
+
+/* LAYOUT */
+.grid{display:grid;grid-template-columns:1fr 380px;gap:12px;padding:12px;max-width:1280px;margin:0 auto}
+@media(max-width:880px){.grid{grid-template-columns:1fr}}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:5px;overflow:hidden;margin-bottom:12px}
+.ch{background:var(--accent);color:#fff;padding:6px 12px;font-size:.72rem;font-family:monospace;letter-spacing:.07em;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.cb{padding:12px}
+
+/* CANVAS WRAPPER — tamaño fijo para evitar el bug de expansión */
+.canvas-wrap{position:relative;width:100%;background:#f7f9f5;border-top:1px solid var(--border)}
+#simCanvas{display:block;width:100%;height:300px}
+
+/* IMAGE AREA */
+.img-area{min-height:160px;background:#eaf0e5;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.img-area img{max-width:100%;max-height:210px;object-fit:contain;display:block}
+.img-drop{border:2px dashed var(--border);border-radius:6px;padding:22px;text-align:center;cursor:pointer;font-family:monospace;font-size:.78rem;color:var(--muted);transition:border-color .2s,background .2s}
+.img-drop:hover{border-color:var(--accent2);background:#e0ede5}
+.img-drop.over{border-color:var(--accent);background:#d4e8d9}
+#imgCanvas{display:block;max-width:100%;cursor:crosshair}
+.img-badge{position:absolute;bottom:5px;right:7px;background:rgba(0,0,0,.5);color:#fff;font-size:.62rem;padding:1px 6px;border-radius:3px;font-family:monospace}
+
+/* TABS for left column */
+.tabs{display:flex;border-bottom:1px solid var(--border)}
+.tab{padding:6px 14px;font-size:.75rem;font-family:monospace;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;background:none;border-top:none;border-left:none;border-right:none}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:bold}
+
+/* BUTTONS */
+.btn{padding:5px 14px;border-radius:4px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-family:monospace;font-size:.78rem;cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--hdr)}
+.btn.sec{background:transparent;color:var(--accent)}
+.btn.sec:hover{background:var(--code)}
+.btn.warn{border-color:var(--warn);background:var(--warn)}
+.btn.warn:hover{background:#963a00}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+
+/* CONTROLS */
+.ctrl-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.ctrl-row label{font-size:.75rem;color:var(--muted);font-family:monospace;white-space:nowrap}
+select,input[type=range]{font-family:monospace;font-size:.78rem;border:1px solid var(--border);border-radius:4px;background:var(--code);color:var(--text);padding:2px 5px}
+input[type=range]{padding:0;cursor:pointer;width:110px}
+
+/* PILLS */
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.pill{padding:3px 10px;border:1px solid var(--border);border-radius:16px;font-size:.72rem;font-family:monospace;cursor:pointer;user-select:none;background:var(--code);transition:all .15s}
+.pill.on{border-color:var(--accent2);background:#d5edd9;color:var(--accent)}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-family:monospace;font-size:.74rem}
+th{background:var(--code);border:1px solid var(--border);padding:3px 7px;color:var(--muted);font-weight:normal;text-align:left}
+td{border:1px solid var(--border);padding:3px 7px}
+tr:nth-child(even) td{background:#fafcf8}
+
+/* EQUATION BOX */
+.eqbox{background:var(--code);border-left:3px solid var(--accent2);border-radius:3px;padding:6px 10px;font-family:monospace;font-size:.72rem;margin-bottom:5px;white-space:pre-wrap;word-break:break-all}
+.eqbox .seg{color:var(--accent);font-weight:bold}
+
+/* CONTINUITY CARDS */
+.cont3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.ccard{border:1px solid var(--border);border-radius:4px;padding:7px;text-align:center}
+.ccard .clbl{font-size:.68rem;color:var(--muted);font-family:monospace}
+.ccard .cok{font-size:1rem;margin:2px 0}
+.ccard .cval{font-family:monospace;font-size:.68rem;color:var(--muted)}
+
+/* FREQ DISPLAY */
+.freq-box{background:var(--hdr);color:#fff;border-radius:4px;padding:9px 14px;display:flex;align-items:baseline;gap:7px;margin-top:8px}
+.freq-box .fn{font-size:1.8rem;font-family:monospace;font-weight:bold}
+.freq-box .fu{font-size:.85rem;opacity:.7;font-family:monospace}
+.freq-box .fl{font-size:.7rem;opacity:.55;margin-left:auto;text-align:right;line-height:1.3;font-family:monospace}
+
+/* FOURIER / COMPARE CANVAS */
+#fourierCanvas,#cmpSpline,#cmpRef{display:block;width:100%;background:#f7f9f5}
+
+/* STATUS */
+#statusBar{font-family:monospace;font-size:.72rem;color:var(--muted);padding:3px 12px;background:var(--code);border-top:1px solid var(--border)}
+
+/* IMAGE EXTRACTION INFO */
+.ext-info{background:#fff8e1;border:1px solid #f0c040;border-radius:4px;padding:7px 10px;font-size:.74rem;font-family:monospace;color:#5a4000;margin-top:6px}
+
+/* PROGRESS BAR */
+.prog-wrap{height:4px;background:var(--border);border-radius:2px;margin-top:4px;overflow:hidden}
+.prog-bar{height:100%;width:0%;background:var(--accent2);transition:width .05s}
+
+/* SCROLLABLE SIDE */
+.side-scroll{overflow-y:auto;max-height:calc(100vh - 80px)}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <span style="font-size:2rem">🐦</span>
+  <div>
+    <h1>Biomecánica Matemática de las Aves Paceñas</h1>
+    <p>Simulador de Ciclo de Aleteo · Spline Cúbica + DFT · Métodos Numéricos</p>
+  </div>
+  <div class="hbadge" id="hbadge">Colibrí Andino · Oreotrochilus estella</div>
+</header>
+
+<div class="grid">
+
+<!-- ══════════════════════ COLUMNA IZQUIERDA ══════════════════════ -->
+<div>
+
+  <!-- IMAGEN + EXTRACCIÓN -->
+  <div class="card">
+    <div class="ch">🖼 Imagen de referencia del ala</div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('url')">URL / Estática</button>
+      <button class="tab" onclick="switchTab('upload')">Cargar imagen propia</button>
+      <button class="tab" onclick="switchTab('extract')">Extracción de puntos</button>
+    </div>
+
+    <!-- TAB: URL estática -->
+    <div id="tabUrl" class="cb">
+      <div class="img-area" id="staticImgArea">
+        <img id="staticImg"
+          src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Oreotrochilus_estella.jpg/640px-Oreotrochilus_estella.jpg"
+          alt="Colibrí Andino"
+          onerror="document.getElementById('staticImgArea').innerHTML='<p style=\'padding:16px;font-family:monospace;font-size:.75rem;color:var(--muted)\'>Imagen no disponible. Ve a la pestaña «Cargar imagen propia».</p>'"/>
+        <span class="img-badge">Oreotrochilus estella · Wikimedia CC BY-SA</span>
+      </div>
+      <p style="font-family:monospace;font-size:.72rem;color:var(--muted);margin-top:6px">
+        Imagen pública de referencia. Para usar tu propia foto del ala, ve a la pestaña <strong>Cargar imagen propia</strong>.
+      </p>
+    </div>
+
+    <!-- TAB: Carga de imagen -->
+    <div id="tabUpload" class="cb" style="display:none">
+      <div class="img-drop" id="dropZone"
+           onclick="document.getElementById('fileInput').click()"
+           ondragover="ev.preventDefault();this.classList.add('over')"
+           ondragleave="this.classList.remove('over')"
+           ondrop="handleDrop(event)">
+        📂 Haz clic o arrastra aquí una imagen del ala del ave<br>
+        <span style="font-size:.68rem;opacity:.7">(JPG, PNG, WebP — se procesa localmente, no se sube a ningún servidor)</span>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="loadImageFile(this.files[0])"/>
+      <div id="uploadPreview" style="margin-top:8px;display:none">
+        <img id="uploadedImg" style="max-width:100%;max-height:200px;object-fit:contain;display:block;border:1px solid var(--border);border-radius:4px"/>
+        <div class="btn-row" style="margin-top:6px">
+          <button class="btn" onclick="switchTab('extract');prepareExtraction()">→ Extraer puntos desde esta imagen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Extracción -->
+    <div id="tabExtract" class="cb" style="display:none">
+      <div id="extractControls" style="margin-bottom:8px">
+        <div class="btn-row">
+          <button class="btn" onclick="autoExtractPoints()">⚙ Extracción automática (análisis de borde)</button>
+          <button class="btn sec" onclick="clearExtractedPoints()">✕ Limpiar puntos extraídos</button>
+        </div>
+        <p style="font-family:monospace;font-size:.72rem;color:var(--muted)">
+          O haz <strong>clic</strong> sobre la imagen para marcar puntos manualmente a lo largo del borde del ala.
+        </p>
+        <div class="prog-wrap"><div class="prog-bar" id="progBar"></div></div>
+        <div id="extStatus" style="font-family:monospace;font-size:.7rem;color:var(--muted);margin-top:3px"></div>
+      </div>
+      <div style="position:relative;display:inline-block;max-width:100%">
+        <canvas id="imgCanvas" width="600" height="350"></canvas>
+      </div>
+      <div id="extInfo" class="ext-info" style="display:none"></div>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn" onclick="applyExtractedPoints()" id="applyPtsBtn" disabled>✔ Usar estos puntos para la spline</button>
+        <span id="extractedCount" style="font-family:monospace;font-size:.74rem;color:var(--muted)">0 puntos</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIMULACIÓN -->
+  <div class="card">
+    <div class="ch">⚙ Simulación del ciclo de aleteo — spline cúbica natural</div>
+    <div class="canvas-wrap">
+      <canvas id="simCanvas"></canvas>
+    </div>
+    <div id="statusBar">Listo. Presiona ▶ para animar.</div>
+  </div>
+
+  <!-- FOURIER -->
+  <div class="card">
+    <div class="ch">📊 Espectro de Fourier (DFT real sobre señal spline)</div>
+    <canvas id="fourierCanvas" height="190"></canvas>
+    <div class="cb" style="padding-top:6px">
+      <p style="font-family:monospace;font-size:.72rem;color:var(--muted)">
+        DFT directa O(N²) sobre N=128 muestras de y(t). El bin k con mayor amplitud determina f₀.
+        Eje x: frecuencia en Hz = k·fs/N. Barra naranja = frecuencia fundamental estimada.
+      </p>
+    </div>
+  </div>
+
+  <!-- COMPARATIVA -->
+  <div class="card">
+    <div class="ch">🔬 Comparativa: señal spline vs referencia senoidal bibliográfica</div>
+    <div class="cb">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="font-size:.7rem;font-family:monospace;color:var(--muted);margin-bottom:3px">Señal spline (simulación)</div>
+          <canvas id="cmpSpline" height="110"></canvas>
+        </div>
+        <div>
+          <div style="font-size:.7rem;font-family:monospace;color:var(--muted);margin-bottom:3px">Referencia senoidal (bibliografía)</div>
+          <canvas id="cmpRef" height="110"></canvas>
+        </div>
+      </div>
+      <div id="cmpStats" style="margin-top:8px;font-family:monospace;font-size:.72rem;color:var(--muted)"></div>
+    </div>
+  </div>
+
+</div><!-- /col-izq -->
+
+<!-- ══════════════════════ COLUMNA DERECHA ══════════════════════ -->
+<div class="side-scroll">
+
+  <!-- CONTROLES -->
+  <div class="card">
+    <div class="ch">🎛 Controles</div>
+    <div class="cb">
+      <div class="ctrl-row">
+        <label>Especie:</label>
+        <select id="speciesSelect" onchange="onSpeciesChange()">
+          <option value="colibri">Colibrí Andino (O. estella)</option>
+          <option value="perdiz">Perdiz de Puna (N. ornata)</option>
+          <option value="gaviota">Gaviota Andina (C. serranus)</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="playBtn" onclick="togglePlay()">▶ Play</button>
+        <button class="btn sec" onclick="doReset()">↺ Reiniciar</button>
+        <label style="font-family:monospace;font-size:.75rem;color:var(--muted)">Vel:</label>
+        <input type="range" id="speedSlider" min="0.2" max="6" step="0.1" value="1" oninput="speed=+this.value;document.getElementById('speedVal').textContent=speed.toFixed(1)+'×'"/>
+        <span id="speedVal" style="font-family:monospace;font-size:.75rem">1.0×</span>
+      </div>
+      <div class="pills" id="pillsRow">
+        <span class="pill on" id="pPts" onclick="togglePill('pPts','showPts')">● Puntos</span>
+        <span class="pill on" id="pSpl" onclick="togglePill('pSpl','showSpl')">∿ Spline</span>
+        <span class="pill on" id="pTrj" onclick="togglePill('pTrj','showTrj')">→ Trayectoria</span>
+        <span class="pill" id="pTan" onclick="togglePill('pTan','showTan')">↗ Tangentes C¹</span>
+        <span class="pill" id="pCrv" onclick="togglePill('pCrv','showCrv')">κ Curvatura</span>
+      </div>
+      <p style="font-family:monospace;font-size:.7rem;color:var(--muted)">
+        Clic en el canvas de simulación para agregar/mover puntos de control. La spline se recalcula al instante.
+      </p>
+      <div class="btn-row" style="margin-top:6px">
+        <button class="btn sec" onclick="resetToDefault()">↩ Puntos por defecto</button>
+        <button class="btn sec" onclick="clearAllPoints()">🗑 Limpiar todos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLA DE PUNTOS -->
+  <div class="card">
+    <div class="ch">📋 Puntos de control (t, y)</div>
+    <div class="cb" style="overflow-x:auto">
+      <table id="ptsTable">
+        <thead><tr><th>#</th><th>t</th><th>y</th><th>S′(t)</th><th>S″(t)</th></tr></thead>
+        <tbody id="ptsTbody"></tbody>
+      </table>
+      <p style="font-family:monospace;font-size:.68rem;color:var(--muted);margin-top:5px">
+        t ∈ [0,1] normalizado; y ∈ [−1,1] posición angular del ala.
+        S′ y S″ se evalúan en cada nodo usando los coeficientes calculados.
+      </p>
+    </div>
+  </div>
+
+  <!-- ECUACIONES POR TRAMO -->
+  <div class="card">
+    <div class="ch">📐 Polinomios cúbicos por tramo</div>
+    <div class="cb" id="eqSection" style="max-height:280px;overflow-y:auto">
+      <p style="font-family:monospace;font-size:.74rem;color:var(--muted)">Calculando…</p>
+    </div>
+  </div>
+
+  <!-- CONTINUIDAD -->
+  <div class="card">
+    <div class="ch">✔ Verificación de continuidad C⁰, C¹, C²</div>
+    <div class="cb">
+      <p style="font-family:monospace;font-size:.72rem;color:var(--muted)">
+        Se evalúa cada nodo interior: límite izquierdo vs derecho de S, S′ y S″.
+        La spline cúbica natural garantiza las tres; se verifica numéricamente.
+      </p>
+      <div class="cont3" id="contGrid">
+        <div class="ccard"><div class="clbl">C⁰</div><div class="cok">—</div><div class="cval">ε=—</div></div>
+        <div class="ccard"><div class="clbl">C¹</div><div class="cok">—</div><div class="cval">ε=—</div></div>
+        <div class="ccard"><div class="clbl">C²</div><div class="cok">—</div><div class="cval">ε=—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FRECUENCIA FUNDAMENTAL -->
+  <div class="card">
+    <div class="ch">🎵 Frecuencia fundamental de aleteo</div>
+    <div class="cb">
+      <div class="freq-box">
+        <span class="fn" id="freqNum">—</span>
+        <span class="fu">Hz</span>
+        <span class="fl" id="freqLbl">DFT sobre<br>señal spline</span>
+      </div>
+      <div id="freqExtra" style="font-family:monospace;font-size:.7rem;color:var(--muted);margin-top:7px"></div>
+    </div>
+  </div>
+
+</div><!-- /col-der -->
+</div><!-- /grid -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   BIOMECÁNICA MATEMÁTICA DE AVES PACEÑAS — núcleo matemático real
+   ═══════════════════════════════════════════════════════════════════
+
+   MÓDULOS:
+   A. Datos de especies
+   B. Spline cúbica natural — algoritmo de Thomas
+   C. Evaluación S(t), S'(t), S''(t)
+   D. Verificación de continuidad C0, C1, C2
+   E. DFT real (sin librería externa)
+   F. Extracción de puntos desde imagen (análisis de borde)
+   G. Renderizado canvas — tamaño fijo (fix del bug de expansión)
+   H. Fourier canvas
+   I. Canvases comparativos
+   J. Loop de animación
+   K. UI y eventos
+*/
+
+/* ─── A. DATOS DE ESPECIES ────────────────────────────────────────
+   Puntos (t, y): t ∈ [0,1] normalizado por ciclo; y ∈ [−1,1]
+   posición angular del ala (−1=abajo, +1=arriba).
+   Basados en estudios cinemáticos de colibríes andinos (Tobalske 2010,
+   Altshuler & Dudley 2003) — valores representativos.
+*/
+const SPECIES = {
+  colibri:{
+    name:"Colibrí Andino", latin:"Oreotrochilus estella", freqRef:20, wingCm:12,
+    pts:[{t:0.00,y:0.00},{t:0.06,y:0.82},{t:0.14,y:1.00},{t:0.22,y:0.72},
+         {t:0.35,y:0.10},{t:0.42,y:-0.18},{t:0.50,y:-0.55},{t:0.62,y:-1.00},
+         {t:0.74,y:-0.80},{t:0.84,y:-0.38},{t:0.93,y:-0.08},{t:1.00,y:0.00}]
+  },
+  perdiz:{
+    name:"Perdiz de Puna", latin:"Nothoprocta ornata", freqRef:8, wingCm:55,
+    pts:[{t:0.00,y:0.00},{t:0.12,y:0.52},{t:0.28,y:1.00},{t:0.42,y:0.30},
+         {t:0.50,y:0.00},{t:0.60,y:-0.42},{t:0.75,y:-1.00},{t:0.88,y:-0.48},{t:1.00,y:0.00}]
+  },
+  gaviota:{
+    name:"Gaviota Andina", latin:"Chroicocephalus serranus", freqRef:4, wingCm:100,
+    pts:[{t:0.00,y:0.00},{t:0.18,y:0.42},{t:0.38,y:1.00},{t:0.50,y:0.18},
+         {t:0.55,y:0.00},{t:0.68,y:-0.38},{t:0.82,y:-1.00},{t:0.93,y:-0.52},{t:1.00,y:0.00}]
+  }
+};
+
+let curSpecies = 'colibri';
+let ctrlPts    = SPECIES[curSpecies].pts.map(p=>({...p}));
+let spCoeffs   = null;
+
+// Estado de animación
+let playing  = false;
+let animId   = null;
+let phase    = 0;
+let speed    = 1;
+let lastTS   = null;
+
+// Toggles de visualización
+const VIS = {showPts:true, showSpl:true, showTrj:true, showTan:false, showCrv:false};
+
+// Canvas de simulación — dimensiones físicas fijas
+const simCanvas = document.getElementById('simCanvas');
+const simCtx    = simCanvas.getContext('2d');
+let   simW = 0, simH = 300;
+
+/* ─── B. SPLINE CÚBICA NATURAL — ALGORITMO DE THOMAS ──────────────
+   Resuelve el sistema tridiagonal para los momentos M_i = S''(t_i).
+   Condiciones de frontera natural: M_0 = M_n = 0.
+
+   S_i(t) = a_i + b_i*(t−t_i) + c_i*(t−t_i)² + d_i*(t−t_i)³
+   con:
+     a_i = y_i
+     b_i = (y_{i+1}−y_i)/h_i − h_i*(2M_i+M_{i+1})/6
+     c_i = M_i/2
+     d_i = (M_{i+1}−M_i)/(6*h_i)
+*/
+function computeSpline(pts) {
+  const n = pts.length - 1;
+  if (n < 2) return null;
+
+  const t = pts.map(p=>p.t);
+  const y = pts.map(p=>p.y);
+  const h = Array.from({length:n}, (_,i) => t[i+1] - t[i]);
+
+  // Validar que no haya h_i = 0
+  if (h.some(hi => hi <= 0)) return null;
+
+  const m = n - 1; // número de incógnitas internas M_1..M_{n-1}
+
+  // Vectores del sistema tridiagonal
+  const diag = new Float64Array(m);
+  const sup  = new Float64Array(m); // superdiagonal
+  const sub  = new Float64Array(m); // subdiagonal
+  const rhs  = new Float64Array(m);
+
+  for (let i = 0; i < m; i++) {
+    const ii = i + 1;
+    diag[i] = 2*(h[ii-1] + h[ii]);
+    if (i > 0)     sub[i]  = h[ii-1];
+    if (i < m-1)   sup[i]  = h[ii];
+    rhs[i] = 6*((y[ii+1]-y[ii])/h[ii] - (y[ii]-y[ii-1])/h[ii-1]);
+  }
+
+  // Thomas forward sweep
+  const c2 = sup.slice();
+  const r2 = rhs.slice();
+  for (let i = 1; i < m; i++) {
+    const w = sub[i] / diag[i-1];
+    diag[i] -= w * c2[i-1];
+    r2[i]   -= w * r2[i-1];
+  }
+  // Back substitution
+  const Mint = new Float64Array(m);
+  Mint[m-1] = r2[m-1] / diag[m-1];
+  for (let i = m-2; i >= 0; i--)
+    Mint[i] = (r2[i] - c2[i]*Mint[i+1]) / diag[i];
+
+  // Momentos completos M_0=0, M_1..M_{n-1}, M_n=0
+  const M = new Float64Array(n+1);
+  for (let i = 0; i < m; i++) M[i+1] = Mint[i];
+
+  // Coeficientes por tramo
+  const coeffs = [];
+  for (let i = 0; i < n; i++) {
+    const hi = h[i];
+    coeffs.push({
+      i, t0:t[i], t1:t[i+1], hi,
+      a: y[i],
+      b: (y[i+1]-y[i])/hi - hi*(2*M[i]+M[i+1])/6,
+      c: M[i]/2,
+      d: (M[i+1]-M[i])/(6*hi),
+      M0: M[i], M1: M[i+1]
+    });
+  }
+  return coeffs;
+}
+
+/* ─── C. EVALUACIÓN DE SPLINE Y DERIVADAS ────────────────────────*/
+function findSeg(coeffs, t) {
+  // Búsqueda binaria del tramo
+  let lo=0, hi=coeffs.length-1;
+  while (lo < hi) {
+    const mid = (lo+hi+1)>>1;
+    if (coeffs[mid].t0 <= t) lo=mid; else hi=mid-1;
+  }
+  return coeffs[lo];
+}
+
+function evalS(coeffs, t) {
+  if (!coeffs) return 0;
+  const tc = Math.max(coeffs[0].t0, Math.min(coeffs[coeffs.length-1].t1, t));
+  const s  = findSeg(coeffs, tc);
+  const u  = tc - s.t0;
+  return s.a + u*(s.b + u*(s.c + u*s.d));
+}
+
+function evalS1(coeffs, t) { // S'(t)
+  const tc = Math.max(coeffs[0].t0, Math.min(coeffs[coeffs.length-1].t1, t));
+  const s  = findSeg(coeffs, tc);
+  const u  = tc - s.t0;
+  return s.b + u*(2*s.c + 3*u*s.d);
+}
+
+function evalS2(coeffs, t) { // S''(t)
+  const tc = Math.max(coeffs[0].t0, Math.min(coeffs[coeffs.length-1].t1, t));
+  const s  = findSeg(coeffs, tc);
+  const u  = tc - s.t0;
+  return 2*s.c + 6*u*s.d;
+}
+
+/* ─── D. VERIFICACIÓN DE CONTINUIDAD ─────────────────────────────
+   Para cada nodo interior: evalúa límites laterales de S, S', S''.
+   Reporta el error máximo. Tolerancia numérica: 1e-10.
+*/
+function verifyCont(coeffs) {
+  if (!coeffs || coeffs.length < 2) return null;
+  let e0=0, e1=0, e2=0;
+  for (let i=0; i<coeffs.length-1; i++) {
+    const tn = coeffs[i].t1;
+    const eps = 1e-10;
+    // Evalúa desde la izquierda (tramo i) y derecha (tramo i+1) directamente
+    const sL = coeffs[i], sR = coeffs[i+1];
+    const uL = sL.hi, uR = 0;
+    const yL  = sL.a + uL*(sL.b + uL*(sL.c + uL*sL.d));
+    const yR  = sR.a;
+    const d1L = sL.b + uL*(2*sL.c + 3*uL*sL.d);
+    const d1R = sR.b;
+    const d2L = 2*sL.c + 6*uL*sL.d;
+    const d2R = 2*sR.c;
+    e0 = Math.max(e0, Math.abs(yR-yL));
+    e1 = Math.max(e1, Math.abs(d1R-d1L));
+    e2 = Math.max(e2, Math.abs(d2R-d2L));
+  }
+  return {C0:e0, C1:e1, C2:e2};
+}
+
+/* ─── E. DFT REAL ─────────────────────────────────────────────────
+   Transformada Discreta de Fourier directa O(N²).
+   Genera la señal y[n] = S(n/N) para n=0..N-1.
+   Espectro unilateral: A[k] = 2|X[k]|/N para k=1..N/2.
+   Frecuencia: f[k] = k * fs / N, donde fs = N * freqRef.
+   El pico en k≥1 da la frecuencia fundamental estimada.
+*/
+const DFT_N = 128;
+
+function buildDFT(coeffs, freqRef) {
+  const signal = new Float64Array(DFT_N);
+  for (let n=0; n<DFT_N; n++)
+    signal[n] = evalS(coeffs, n/DFT_N);
+
+  // DFT directa
+  const re = new Float64Array(DFT_N);
+  const im = new Float64Array(DFT_N);
+  for (let k=0; k<DFT_N; k++) {
+    let sr=0, si=0;
+    for (let n=0; n<DFT_N; n++) {
+      const ang = -2*Math.PI*k*n/DFT_N;
+      sr += signal[n]*Math.cos(ang);
+      si += signal[n]*Math.sin(ang);
+    }
+    re[k]=sr; im[k]=si;
+  }
+
+  // Espectro unilateral
+  const half = Math.floor(DFT_N/2)+1;
+  const amp  = new Float64Array(half);
+  amp[0] = Math.abs(re[0])/DFT_N;
+  for (let k=1; k<half; k++)
+    amp[k] = 2*Math.sqrt(re[k]**2+im[k]**2)/DFT_N;
+
+  const fs = DFT_N*freqRef;
+
+  // Pico dominante (k>=1, ignora DC)
+  let maxA=0, peakK=1;
+  for (let k=1; k<half; k++)
+    if (amp[k]>maxA){maxA=amp[k];peakK=k;}
+
+  return { signal, amp, fs, peakK, f0: peakK*fs/DFT_N };
+}
+
+/* ─── F. EXTRACCIÓN DE PUNTOS DESDE IMAGEN ────────────────────────
+   Algoritmo:
+   1. Dibujar la imagen en un canvas offscreen.
+   2. Obtener datos de píxeles (RGBA).
+   3. Por cada columna x (de izquierda a derecha) buscar el píxel
+      más oscuro (menor luminancia) → ese es el borde del ala.
+   4. Filtrar outliers (mediana móvil).
+   5. Submuestrear a N puntos equiespaciados en x.
+   6. Normalizar: t = x/W ∈ [0,1], y = -(yPx - yMid)/yRange ∈ [-1,1].
+
+   Nota: requiere imagen cargada por el usuario. Si la imagen tiene
+   mucho ruido de fondo, el usuario puede hacer clic manual.
+*/
+let uploadedImageData = null; // ImageData del ala cargada
+let extractedPts = [];        // puntos extraídos
+let manualExtPts = [];        // puntos marcados manualmente
+
+const imgCanvas = document.getElementById('imgCanvas');
+const imgCtx    = imgCanvas.getContext('2d');
+
+function loadImageFile(file) {
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    // Escalar imagen a canvas (max 600×350)
+    const maxW=600, maxH=350;
+    let W=img.width, H=img.height;
+    if (W>maxW){const r=maxW/W;W=maxW;H=Math.round(H*r);}
+    if (H>maxH){const r=maxH/H;H=maxH;W=Math.round(W*r);}
+    imgCanvas.width=W; imgCanvas.height=H;
+    imgCtx.drawImage(img,0,0,W,H);
+    uploadedImageData = imgCtx.getImageData(0,0,W,H);
+    document.getElementById('uploadedImg').src = url;
+    document.getElementById('uploadPreview').style.display = 'block';
+    document.getElementById('extStatus').textContent = `Imagen cargada: ${W}×${H}px. Listo para extraer puntos.`;
+    manualExtPts = [];
+    extractedPts = [];
+    updateExtractCount();
+    URL.revokeObjectURL(url);
+  };
+  img.src = url;
+}
+
+function prepareExtraction() {
+  if (!uploadedImageData) {
+    document.getElementById('extStatus').textContent = 'Primero carga una imagen en la pestaña anterior.';
+    return;
+  }
+  // Redibujar imagen en imgCanvas
+  imgCtx.putImageData(uploadedImageData,0,0);
+}
+
+function autoExtractPoints() {
+  if (!uploadedImageData) {
+    document.getElementById('extStatus').textContent = '⚠ Carga una imagen primero.';
+    return;
+  }
+  const data = uploadedImageData.data;
+  const W = uploadedImageData.width;
+  const H = uploadedImageData.height;
+
+  document.getElementById('extStatus').textContent = 'Analizando imagen…';
+  document.getElementById('progBar').style.width = '0%';
+
+  // Procesamiento asíncrono para no bloquear la UI
+  setTimeout(() => {
+    // Por cada columna, busca el píxel con menor luminancia
+    // (asumiendo ala oscura sobre fondo claro)
+    const rawY = new Float64Array(W);
+
+    for (let x=0; x<W; x++) {
+      let minLum = Infinity, bestY = H/2;
+      for (let y=0; y<H; y++) {
+        const idx = (y*W+x)*4;
+        const r=data[idx], g=data[idx+1], b=data[idx+2], a=data[idx+3];
+        if (a < 50) continue; // píxel transparente
+        const lum = 0.299*r + 0.587*g + 0.114*b;
+        if (lum < minLum) { minLum=lum; bestY=y; }
+      }
+      rawY[x] = bestY;
+    }
+
+    // Mediana móvil para filtrar ruido (ventana=7)
+    const filtY = new Float64Array(W);
+    const win = 7, half = Math.floor(win/2);
+    for (let x=0; x<W; x++) {
+      const slice = [];
+      for (let d=-half; d<=half; d++) {
+        const xi = Math.max(0,Math.min(W-1,x+d));
+        slice.push(rawY[xi]);
+      }
+      slice.sort((a,b)=>a-b);
+      filtY[x] = slice[Math.floor(win/2)];
+    }
+
+    // Submuestrear a 12 puntos representativos
+    const nPts = 12;
+    const step = (W-1)/(nPts-1);
+    extractedPts = [];
+    for (let i=0; i<nPts; i++) {
+      const xi = Math.round(i*step);
+      extractedPts.push({xPx: xi, yPx: filtY[xi]});
+    }
+
+    // Normalizar: t ∈ [0,1], y ∈ [-1,1]
+    const yMin = Math.min(...extractedPts.map(p=>p.yPx));
+    const yMax = Math.max(...extractedPts.map(p=>p.yPx));
+    const yMid = (yMin+yMax)/2;
+    const yRng = (yMax-yMin)/2 || 1;
+
+    extractedPts = extractedPts.map((p,i) => ({
+      t: parseFloat((i/(nPts-1)).toFixed(4)),
+      y: parseFloat((-(p.yPx-yMid)/yRng).toFixed(4)),
+      xPx: p.xPx, yPx: p.yPx
+    }));
+
+    // Forzar cierre del ciclo
+    extractedPts[0].y = 0;
+    extractedPts[nPts-1].y = 0;
+
+    drawExtractedPoints();
+    updateExtractCount();
+    document.getElementById('progBar').style.width = '100%';
+    document.getElementById('extStatus').textContent =
+      `Extracción completada: ${nPts} puntos de control encontrados.`;
+    document.getElementById('applyPtsBtn').disabled = false;
+
+    const info = document.getElementById('extInfo');
+    info.style.display = 'block';
+    info.textContent =
+      `y_min_px=${yMin.toFixed(0)}, y_max_px=${yMax.toFixed(0)}, ` +
+      `rango_px=${(yMax-yMin).toFixed(0)}, W=${W}, H=${H}. ` +
+      `Algoritmo: mínimo de luminancia por columna + mediana móvil (win=7).`;
+  }, 30);
+}
+
+function drawExtractedPoints() {
+  if (!uploadedImageData) return;
+  imgCtx.putImageData(uploadedImageData,0,0);
+  // Dibujar perfil extraído
+  const allPts = [...extractedPts, ...manualExtPts].sort((a,b)=>a.t-b.t);
+  allPts.forEach((p, i) => {
+    if (p.xPx === undefined) {
+      // punto manual
+      p.xPx = p.t * imgCanvas.width;
+      p.yPx = imgCanvas.height/2 - p.y*(imgCanvas.height/2 - 10);
+    }
+    imgCtx.beginPath();
+    imgCtx.arc(p.xPx, p.yPx, 5, 0, 2*Math.PI);
+    imgCtx.fillStyle = i < extractedPts.length ? '#2e5e40' : '#b86a1a';
+    imgCtx.fill();
+    imgCtx.strokeStyle = '#fff'; imgCtx.lineWidth = 1.5;
+    imgCtx.stroke();
+    imgCtx.fillStyle = '#fff';
+    imgCtx.font = '9px monospace';
+    imgCtx.fillText(i, p.xPx+6, p.yPx-4);
+  });
+  // Línea conectando puntos automáticos
+  if (extractedPts.length > 1) {
+    imgCtx.beginPath();
+    imgCtx.strokeStyle = 'rgba(46,94,64,0.6)';
+    imgCtx.lineWidth = 2;
+    extractedPts.forEach((p,i) => {
+      i===0 ? imgCtx.moveTo(p.xPx,p.yPx) : imgCtx.lineTo(p.xPx,p.yPx);
+    });
+    imgCtx.stroke();
+  }
+}
+
+function clearExtractedPoints() {
+  extractedPts = []; manualExtPts = [];
+  if (uploadedImageData) imgCtx.putImageData(uploadedImageData,0,0);
+  updateExtractCount();
+  document.getElementById('applyPtsBtn').disabled = true;
+  document.getElementById('extInfo').style.display = 'none';
+  document.getElementById('extStatus').textContent = 'Puntos limpiados.';
+}
+
+function updateExtractCount() {
+  const n = extractedPts.length + manualExtPts.length;
+  document.getElementById('extractedCount').textContent = `${n} puntos`;
+}
+
+function applyExtractedPoints() {
+  const all = [...extractedPts, ...manualExtPts].sort((a,b)=>a.t-b.t);
+  if (all.length < 3) {
+    alert('Se necesitan al menos 3 puntos para la spline.');
+    return;
+  }
+  ctrlPts = all.map(p=>({t:p.t, y:p.y}));
+  recalcAll();
+  // Ir a la pestaña de simulación
+  switchTab('url');
+  document.getElementById('statusBar').textContent =
+    `Puntos extraídos de imagen aplicados (${ctrlPts.length} puntos). Spline recalculada.`;
+}
+
+// Clic manual en imgCanvas para agregar puntos
+imgCanvas.addEventListener('click', e => {
+  if (!uploadedImageData) return;
+  const rect = imgCanvas.getBoundingClientRect();
+  const xPx = (e.clientX-rect.left) * (imgCanvas.width/rect.width);
+  const yPx = (e.clientY-rect.top)  * (imgCanvas.height/rect.height);
+  const t = parseFloat((xPx/imgCanvas.width).toFixed(4));
+  const yNorm = parseFloat((-(yPx - imgCanvas.height/2)/(imgCanvas.height/2-10)).toFixed(4));
+  manualExtPts.push({t, y:Math.max(-1.5,Math.min(1.5,yNorm)), xPx, yPx});
+  manualExtPts.sort((a,b)=>a.t-b.t);
+  drawExtractedPoints();
+  updateExtractCount();
+  if (extractedPts.length>0 || manualExtPts.length>=3)
+    document.getElementById('applyPtsBtn').disabled = false;
+});
+
+function handleDrop(ev) {
+  ev.preventDefault();
+  document.getElementById('dropZone').classList.remove('over');
+  const f = ev.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) loadImageFile(f);
+}
+
+/* ─── G. RENDERIZADO DEL CANVAS DE SIMULACIÓN ────────────────────
+   FIX BUG: el canvas tiene dimensiones CSS fluidas pero dimensiones
+   físicas (width/height attributes) fijas. Solo se actualizan al
+   montar o en resize explícito, NUNCA dentro del loop de animación.
+   Eso evita que el canvas se resetee y "salte" en cada frame.
+*/
+function initSimCanvas() {
+  simW = simCanvas.offsetWidth || 640;
+  simH = 300;
+  simCanvas.width  = simW;
+  simCanvas.height = simH;
+}
+
+// Márgenes del gráfico dentro del canvas
+const MAR = {l:42, r:18, t:22, b:28};
+
+function tToX(t) { return MAR.l + t*(simW-MAR.l-MAR.r); }
+function yToY(y) { return simH/2 - y*((simH-MAR.t-MAR.b)/2); }
+
+function drawSim() {
+  const ctx = simCtx;
+  const W=simW, H=simH;
+  ctx.clearRect(0,0,W,H);
+
+  // Fondo
+  ctx.fillStyle='#f7f9f5'; ctx.fillRect(0,0,W,H);
+
+  // Cuadrícula
+  ctx.strokeStyle='#dde8d8'; ctx.lineWidth=.8;
+  [-1,-.5,0,.5,1].forEach(gy=>{
+    const yy=yToY(gy);
+    ctx.beginPath(); ctx.moveTo(MAR.l,yy); ctx.lineTo(W-MAR.r,yy); ctx.stroke();
+    ctx.fillStyle='#aaa'; ctx.font='9px monospace';
+    ctx.fillText(gy.toFixed(1),2,yy+3);
+  });
+  [0,.25,.5,.75,1].forEach(gt=>{
+    const xx=tToX(gt);
+    ctx.beginPath(); ctx.moveTo(xx,MAR.t); ctx.lineTo(xx,H-MAR.b); ctx.stroke();
+    ctx.fillStyle='#aaa'; ctx.font='9px monospace';
+    ctx.fillText(gt.toFixed(2),xx-10,H-4);
+  });
+
+  // Ejes
+  ctx.strokeStyle='#a0b8a0'; ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.moveTo(MAR.l,H/2); ctx.lineTo(W-MAR.r,H/2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(MAR.l,MAR.t); ctx.lineTo(MAR.l,H-MAR.b); ctx.stroke();
+
+  if (!spCoeffs) { drawNoData(); return; }
+
+  // Curvatura κ(t) como banda de color (opcional)
+  if (VIS.showCrv) {
+    for (let i=0; i<=500; i++) {
+      const t1=i/500, t2=(i+1)/500;
+      const k=evalS2(spCoeffs,(t1+t2)/2);
+      const alpha=Math.min(0.4,Math.abs(k)*0.15);
+      ctx.fillStyle = k>0 ? `rgba(46,94,64,${alpha})` : `rgba(184,106,26,${alpha})`;
+      ctx.fillRect(tToX(t1),MAR.t,tToX(t2)-tToX(t1),H-MAR.t-MAR.b);
+    }
+  }
+
+  // Trayectoria recorrida (hasta la fase actual)
+  if (VIS.showTrj && phase>0) {
+    ctx.beginPath(); ctx.strokeStyle='rgba(90,158,114,0.45)'; ctx.lineWidth=5;
+    let first=true;
+    for (let i=0; i<=Math.floor(phase*600); i++) {
+      const t=i/600;
+      if (t>phase) break;
+      const x=tToX(t), y=yToY(evalS(spCoeffs,t));
+      first ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      first=false;
+    }
+    ctx.stroke();
+  }
+
+  // Curva spline completa
+  if (VIS.showSpl) {
+    ctx.beginPath(); ctx.strokeStyle='#2e5e40'; ctx.lineWidth=2.2;
+    let first=true;
+    for (let i=0; i<=600; i++) {
+      const t=i/600;
+      const x=tToX(t), y=yToY(evalS(spCoeffs,t));
+      first ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      first=false;
+    }
+    ctx.stroke();
+  }
+
+  // Tangentes C¹ en nodos
+  if (VIS.showTan && ctrlPts.length>=2) {
+    ctx.strokeStyle='#b86a1a'; ctx.lineWidth=1; ctx.setLineDash([4,3]);
+    ctrlPts.forEach(p=>{
+      const d1=evalS1(spCoeffs,p.t);
+      const dt=0.07;
+      const x0=tToX(p.t-dt), x1=tToX(p.t+dt);
+      const y0=yToY(p.y-d1*dt), y1=yToY(p.y+d1*dt);
+      ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+  }
+
+  // Puntos de control
+  if (VIS.showPts) {
+    ctrlPts.forEach((p,i)=>{
+      const x=tToX(p.t), y=yToY(p.y);
+      ctx.beginPath(); ctx.arc(x,y,5,0,2*Math.PI);
+      ctx.fillStyle='#2e5e40'; ctx.fill();
+      ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+      ctx.fillStyle='#2e5e40'; ctx.font='9px monospace';
+      ctx.fillText(`P${i}`,x+7,y-5);
+    });
+  }
+
+  // Marcador de fase (cursor naranja)
+  if (playing || phase>0) {
+    const cx=tToX(phase), cy=yToY(evalS(spCoeffs,phase));
+    // Línea vertical
+    ctx.strokeStyle='rgba(184,106,26,0.35)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(cx,MAR.t); ctx.lineTo(cx,H-MAR.b); ctx.stroke();
+    ctx.setLineDash([]);
+    // Punto
+    ctx.beginPath(); ctx.arc(cx,cy,7,0,2*Math.PI);
+    ctx.fillStyle='#b86a1a'; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+    // Valor actual
+    ctx.fillStyle='#1e3d2a'; ctx.font='bold 9px monospace';
+    ctx.fillText(`y=${evalS(spCoeffs,phase).toFixed(3)}`,cx+10,cy-8);
+  }
+
+  // Labels
+  ctx.fillStyle='#888'; ctx.font='9px monospace';
+  ctx.fillText('t (ciclo normalizado)',W/2-45,H-1);
+  ctx.save(); ctx.translate(10,H/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('y (pos. ala)',-28,0); ctx.restore();
+}
+
+function drawNoData() {
+  simCtx.fillStyle='#bbb'; simCtx.font='13px monospace';
+  simCtx.fillText('Agrega al menos 3 puntos de control.',60,simH/2);
+}
+
+/* ─── H. CANVAS FOURIER ──────────────────────────────────────────*/
+const fourierCanvas = document.getElementById('fourierCanvas');
+const fCtx = fourierCanvas.getContext('2d');
+
+function drawFourier(amp, peakK, fs) {
+  fourierCanvas.width  = fourierCanvas.offsetWidth||600;
+  fourierCanvas.height = 190;
+  const W=fourierCanvas.width, H=190;
+  fCtx.clearRect(0,0,W,H);
+  fCtx.fillStyle='#f7f9f5'; fCtx.fillRect(0,0,W,H);
+
+  const show=Math.min(amp.length,45);
+  const maxA=Math.max(1e-12,...amp.slice(0,show));
+  const barW=(W-55)/show;
+
+  for (let k=0; k<show; k++) {
+    const bH=(amp[k]/maxA)*(H-44);
+    const x=50+k*barW, y=H-28-bH;
+    fCtx.fillStyle = k===peakK ? '#b86a1a' : '#5a9e72';
+    fCtx.fillRect(x,y,Math.max(barW-1.5,1),bH);
+    if (k%4===0){
+      fCtx.fillStyle='#aaa'; fCtx.font='8px monospace';
+      fCtx.fillText((k*fs/DFT_N).toFixed(0),x-3,H-10);
+    }
+  }
+
+  // Pico
+  const px=50+peakK*barW+barW/2;
+  const fPeak=(peakK*fs/DFT_N).toFixed(1);
+  fCtx.strokeStyle='#b86a1a'; fCtx.lineWidth=1.2; fCtx.setLineDash([3,3]);
+  fCtx.beginPath(); fCtx.moveTo(px,8); fCtx.lineTo(px,H-28); fCtx.stroke();
+  fCtx.setLineDash([]);
+  fCtx.fillStyle='#b86a1a'; fCtx.font='bold 9px monospace';
+  fCtx.fillText(`f₀=${fPeak} Hz`,px+3,20);
+
+  // Ejes
+  fCtx.fillStyle='#888'; fCtx.font='9px monospace';
+  fCtx.fillText('Frecuencia (Hz)',W/2-35,H-1);
+  fCtx.save(); fCtx.translate(10,H/2); fCtx.rotate(-Math.PI/2);
+  fCtx.fillText('|X[k]|',-15,0); fCtx.restore();
+}
+
+/* ─── I. CANVASES COMPARATIVOS ───────────────────────────────────*/
+function drawSignal(canvasId, signal, color, label) {
+  const cv=document.getElementById(canvasId);
+  cv.width=cv.offsetWidth||300; cv.height=110;
+  const ctx=cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#f7f9f5'; ctx.fillRect(0,0,W,H);
+  const N=signal.length;
+  const maxV=Math.max(1e-12,...signal.map(Math.abs));
+  ctx.strokeStyle=color; ctx.lineWidth=1.6;
+  ctx.beginPath();
+  for (let i=0;i<N;i++){
+    const x=8+i/(N-1)*(W-16), y=H/2-signal[i]/maxV*(H/2-12);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  ctx.strokeStyle='#ddd'; ctx.lineWidth=.8;
+  ctx.beginPath(); ctx.moveTo(8,H/2); ctx.lineTo(W-8,H/2); ctx.stroke();
+  ctx.fillStyle='#999'; ctx.font='8px monospace';
+  ctx.fillText(label,10,12);
+}
+
+function drawComparatives(signal, freqRef) {
+  drawSignal('cmpSpline', signal, '#2e5e40','y(t) — spline cúbica');
+  const ref=new Float64Array(DFT_N);
+  for (let n=0;n<DFT_N;n++){
+    const t=n/DFT_N;
+    ref[n]=0.82*Math.sin(2*Math.PI*t)+0.18*Math.sin(4*Math.PI*t+0.3);
+  }
+  drawSignal('cmpRef', ref, '#2471a3','y_ref(t) — modelo senoidal bibliográfico');
+
+  let rmsS=0,rmsR=0,cc=0;
+  for (let i=0;i<DFT_N;i++){rmsS+=signal[i]**2;rmsR+=ref[i]**2;cc+=signal[i]*ref[i];}
+  rmsS=Math.sqrt(rmsS/DFT_N); rmsR=Math.sqrt(rmsR/DFT_N);
+  const rho=(cc/DFT_N)/(rmsS*rmsR+1e-14);
+
+  document.getElementById('cmpStats').innerHTML=
+    `RMS simulación: <b>${rmsS.toFixed(4)}</b> &nbsp;|&nbsp; ` +
+    `RMS referencia: <b>${rmsR.toFixed(4)}</b> &nbsp;|&nbsp; ` +
+    `ρ (correlación normalizada): <b>${rho.toFixed(4)}</b> &nbsp;|&nbsp; ` +
+    `f₀ ref: <b>${freqRef} Hz</b>`;
+}
+
+/* ─── J. LOOP DE ANIMACIÓN ───────────────────────────────────────
+   IMPORTANTE: NO se llama a initSimCanvas() dentro del loop.
+   Las dimensiones del canvas se fijan una vez y no cambian.
+*/
+function animLoop(ts) {
+  if (!playing) return;
+  if (!lastTS) lastTS=ts;
+  const dt=(ts-lastTS)/1000;
+  lastTS=ts;
+  phase+=dt*speed*0.5;
+  if (phase>=1) phase=0;
+
+  drawSim();
+  document.getElementById('statusBar').textContent=
+    `▶ Animando · t=${phase.toFixed(4)} · y=${evalS(spCoeffs,phase).toFixed(5)} · `+
+    `S′=${evalS1(spCoeffs,phase).toFixed(4)} · S″=${evalS2(spCoeffs,phase).toFixed(4)} · `+
+    `vel ${speed.toFixed(1)}×`;
+
+  animId=requestAnimationFrame(animLoop);
+}
+
+function togglePlay() {
+  if (!spCoeffs){ alert('Primero calcula la spline (necesitas al menos 3 puntos).'); return; }
+  playing=!playing;
+  document.getElementById('playBtn').textContent=playing?'⏸ Pause':'▶ Play';
+  if (playing){ lastTS=null; animId=requestAnimationFrame(animLoop); }
+  else { cancelAnimationFrame(animId); }
+}
+
+function doReset() {
+  playing=false; cancelAnimationFrame(animId);
+  phase=0; lastTS=null;
+  document.getElementById('playBtn').textContent='▶ Play';
+  drawSim();
+  document.getElementById('statusBar').textContent='Reiniciado. t=0.';
+}
+
+/* ─── K. RECALCULACIÓN COMPLETA ──────────────────────────────────*/
+function recalcAll() {
+  const pts=[...ctrlPts].sort((a,b)=>a.t-b.t);
+  // Eliminar duplicados en t
+  const clean=[pts[0]];
+  for (let i=1;i<pts.length;i++)
+    if (pts[i].t-clean[clean.length-1].t>1e-5) clean.push(pts[i]);
+
+  spCoeffs = computeSpline(clean);
+  if (!spCoeffs){ drawSim(); return; }
+
+  const sp=SPECIES[curSpecies];
+  const {signal, amp, fs, peakK, f0} = buildDFT(spCoeffs, sp.freqRef);
+
+  // Tabla de puntos
+  document.getElementById('ptsTbody').innerHTML=clean.map((p,i)=>
+    `<tr><td>${i}</td><td>${p.t.toFixed(4)}</td><td>${p.y.toFixed(4)}</td>`+
+    `<td>${evalS1(spCoeffs,p.t).toFixed(4)}</td><td>${evalS2(spCoeffs,p.t).toFixed(4)}</td></tr>`
+  ).join('');
+
+  // Ecuaciones por tramo
+  document.getElementById('eqSection').innerHTML=spCoeffs.map((c,i)=>
+    `<div class="eqbox"><span class="seg">Tramo ${i}: t ∈ [${c.t0.toFixed(4)}, ${c.t1.toFixed(4)}],  h=${c.hi.toFixed(4)}</span>
+S(t) = ${fmtN(c.a)} + ${fmtN(c.b)}·u + ${fmtN(c.c)}·u² + ${fmtN(c.d)}·u³
+donde u = t − ${c.t0.toFixed(4)}
+S′(t) = ${fmtN(c.b)} + ${fmtN(2*c.c)}·u + ${fmtN(3*c.d)}·u²
+S″(t) = ${fmtN(2*c.c)} + ${fmtN(6*c.d)}·u
+M_i=${fmtN(c.M0)},  M_{i+1}=${fmtN(c.M1)}</div>`
+  ).join('');
+
+  // Continuidad
+  const cont=verifyCont(spCoeffs);
+  if (cont) {
+    const tol=1e-8;
+    document.getElementById('contGrid').innerHTML=
+      [{lbl:'C⁰ (valor)',v:cont.C0},{lbl:'C¹ (S′)',v:cont.C1},{lbl:'C² (S″)',v:cont.C2}]
+      .map(({lbl,v})=>
+        `<div class="ccard"><div class="clbl">${lbl}</div>`+
+        `<div class="cok" style="color:${v<tol?'var(--accent)':'var(--red)'}">${v<tol?'✔':'✗'}</div>`+
+        `<div class="cval">ε=${v.toExponential(1)}</div></div>`
+      ).join('');
+  }
+
+  // Frecuencia
+  document.getElementById('freqNum').textContent=f0.toFixed(1);
+  document.getElementById('freqLbl').innerHTML=`DFT sobre señal spline<br>Ref.: ${sp.freqRef} Hz (bibl.)`;
+  document.getElementById('freqExtra').innerHTML=
+    `bin k=${peakK} · fs=${fs} Hz · N=${DFT_N}<br>`+
+    `Error relativo vs bibliografía: ${(Math.abs(f0-sp.freqRef)/sp.freqRef*100).toFixed(2)}%<br>`+
+    `Período estimado: ${(1/f0).toFixed(4)} s`;
+
+  drawSim();
+  drawFourier(amp, peakK, fs);
+  drawComparatives(signal, sp.freqRef);
+}
+
+function fmtN(v) {
+  const s=v.toFixed(6);
+  return (v>=0?' ':'')+s;
+}
+
+/* ─── UI HELPERS ─────────────────────────────────────────────────*/
+function togglePill(id, key) {
+  VIS[key]=!VIS[key];
+  document.getElementById(id).classList.toggle('on');
+  drawSim();
+}
+
+function onSpeciesChange() {
+  curSpecies=document.getElementById('speciesSelect').value;
+  const sp=SPECIES[curSpecies];
+  document.getElementById('hbadge').textContent=`${sp.name} · ${sp.latin}`;
+  ctrlPts=sp.pts.map(p=>({...p}));
+  doReset(); recalcAll();
+}
+
+function resetToDefault() {
+  ctrlPts=SPECIES[curSpecies].pts.map(p=>({...p}));
+  doReset(); recalcAll();
+}
+
+function clearAllPoints() {
+  ctrlPts=[]; spCoeffs=null; doReset();
+  document.getElementById('ptsTbody').innerHTML='';
+  document.getElementById('eqSection').innerHTML='<p style="font-family:monospace;font-size:.74rem;color:var(--muted)">Sin puntos.</p>';
+  drawSim();
+}
+
+// Clic en canvas de simulación → agregar punto de control
+simCanvas.addEventListener('click', e=>{
+  const rect=simCanvas.getBoundingClientRect();
+  // Escalar coordenadas del clic a coordenadas del canvas físico
+  const scaleX=simW/rect.width;
+  const scaleY=simH/rect.height;
+  const px=(e.clientX-rect.left)*scaleX;
+  const py=(e.clientY-rect.top)*scaleY;
+  const t=(px-MAR.l)/(simW-MAR.l-MAR.r);
+  const y=-(py-simH/2)/((simH-MAR.t-MAR.b)/2);
+  if (t<0||t>1) return;
+  const yc=Math.max(-1.5,Math.min(1.5,parseFloat(y.toFixed(4))));
+  const tc=parseFloat(t.toFixed(4));
+  // Si hay un punto muy cercano, actualiza su y
+  let found=false;
+  for (let i=0;i<ctrlPts.length;i++){
+    if (Math.abs(ctrlPts[i].t-tc)<0.025){ctrlPts[i].y=yc;found=true;break;}
+  }
+  if (!found) ctrlPts.push({t:tc,y:yc});
+  ctrlPts.sort((a,b)=>a.t-b.t);
+  recalcAll();
+});
+
+// Tabs de imagen
+function switchTab(tab) {
+  ['url','upload','extract'].forEach(id=>{
+    document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1)).style.display='none';
+  });
+  document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1)).style.display='block';
+  document.querySelectorAll('.tab').forEach((el,i)=>{
+    el.classList.toggle('active',['url','upload','extract'][i]===tab);
+  });
+}
+
+// Resize: actualizar dimensiones del canvas de simulación
+window.addEventListener('resize',()=>{
+  const newW=simCanvas.offsetWidth||640;
+  if (Math.abs(newW-simW)>2){
+    simW=newW;
+    simCanvas.width=simW;
+    simCanvas.height=simH;
+    drawSim();
+    if(spCoeffs){
+      const sp=SPECIES[curSpecies];
+      const {amp,peakK,fs}=buildDFT(spCoeffs,sp.freqRef);
+      drawFourier(amp,peakK,fs);
+    }
+  }
+});
+
+/* ─── INICIALIZACIÓN ─────────────────────────────────────────────*/
+window.addEventListener('load', ()=>{
+  initSimCanvas();
+  recalcAll();
+});
+</script>
+</body>
+</html>
